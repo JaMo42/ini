@@ -67,7 +67,7 @@ typedef struct {
 /// The ini object.
 typedef struct {
   Ini_Table tables_and_globals;
-  const Ini_Options options;
+  Ini_Options options;
 } Ini;
 
 /// The result of parsing an ini file.
