@@ -65,7 +65,7 @@ typedef struct {
 } Ini_Table;
 
 /// The ini object.
-typedef struct ini {
+typedef struct {
   Ini_Table tables_and_globals;
   const Ini_Options options;
 } Ini;
@@ -78,7 +78,7 @@ typedef struct ini {
 /// If the was an error during parsing `ok` is set to `false` and `error`
 /// contains a description of the error. In this case the ini object is already
 /// free'd.
-typedef struct ini_parse_result {
+typedef struct {
   Ini unwrap;
   const char *error;
   bool ok;
