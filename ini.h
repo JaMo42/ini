@@ -5,20 +5,20 @@
 #include "rb_tree.h"
 
 enum {
-  // Allow global properties, these are properties that occurr before any
-  // section, or that re within an unnamed section ("[]").
+  /// Allow global properties, these are properties that occurr before any
+  /// section, or that re within an unnamed section ("[]").
   INI_GLOBAL_PROPS = 0x1,
 
-  // Allow nested sections using `section_delim` as path delimiters.
+  /// Allow nested sections using `section_delim` as path delimiters.
   INI_NESTING = 0x2,
 
-  // Allow comments that do not start at the beginning of a line.
-  // If they are after value there has to be at least one whitespace between
-  // the value and the comment character.
+  /// Allow comments that do not start at the beginning of a line.
+  /// If they are after value there has to be at least one whitespace between
+  /// the value and the comment character.
   INI_INLINE_COMMENTS = 0x4,
 
-  // Allow for values to use quoted strings, these can contain escape
-  // sequences to represent some special characters.
+  /// Allow for values to use quoted strings, these can contain escape
+  /// sequences to represent some special characters.
   INI_QUOTED_VALUES = 0x8,
 
   INI_ALL_FLAGS = 0x10 - 1
@@ -99,7 +99,7 @@ typedef struct {
 Ini_Parse_Result ini_parse_string (const char *data, size_t length,
     Ini_Options options);
 
-// Parses an ini file from a file pointer.
+/// Parses an ini file from a file pointer.
 Ini_Parse_Result ini_parse_file (FILE *fp, Ini_Options options);
 
 /// Gets a reference to a table, if nesting was enabled during parsing the
