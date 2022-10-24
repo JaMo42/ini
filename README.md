@@ -54,7 +54,7 @@ Some special characters can also be changed:
 
 The structure to define these options is declared as:
 
-```
+```c
 typedef struct {
   unsigned char flags;
   char name_value_delim;
@@ -65,10 +65,10 @@ typedef struct {
 
 Predefined values:
 
-```
+```c
 extern const Ini_Options ini_options_stable;
 
-#define INI_OPTIONS_WITH_FLAGS(flags_)
+#define INI_OPTIONS_WITH_FLAGS(flags) ...
 ```
 
 The `ini_options_stable` value defines only the [stable features](https://en.wikipedia.org/wiki/INI_file#Stable_features).
@@ -79,7 +79,7 @@ The `INI_OPTIONS_WITH_FLAGS` macro creates a configuration with custom flags, co
 
 Files can be parsed from either a string or a file pointer:
 
-```
+```c
 Ini_Parse_Result ini_parse_string (const char *data, size_t length, Ini_Options options);
 
 Ini_Parse_Result ini_parse_file (FILE *fp, Ini_Options options);
@@ -89,8 +89,8 @@ If the `length` arguments is `0` the string is parsed until a null terminator.
 
 The `Ini_Parse_Result` structure is declared as:
 
-```
-typedef struct ini_parse_result {
+```c
+typedef struct {
   Ini unwrap;
   const char *error;
   bool ok;
@@ -109,7 +109,7 @@ Note: All strings inside the ini object are allocated so the file/string that wa
 
 ## Getting tables
 
-```
+```c
 const Ini_Table * ini_get_table (const Ini *self, const char *name);
 
 const Ini_Table * ini_table_get_table (const Ini_Table *self, const char *name);
@@ -124,7 +124,7 @@ If `INI_NESTING` was not enabled during parsing this function always returns `NU
 
 ## Getting properties
 
-```
+```c
 typedef struct {
   char *data;
   size_t size;
@@ -136,7 +136,7 @@ The `data` field is a null-terminated string holding the value and `size` the le
 
 Note that if `INI_QUOTED_VALUES` was used the string may also contain additional null bytes.
 
-```
+```c
 Ini_String ini_table_get (const Ini_Table *self, const char *name);
 
 Ini_String ini_get (const Ini *self, const char *table, const char *name);
@@ -148,7 +148,7 @@ The `ini_get` functions is equivalent to a `ini_get_table` followed by a `ini_ta
 
 ## Other
 
-```
+```c
 void ini_Free (Ini *self);
 ```
 
