@@ -106,7 +106,7 @@ static int ini_compare_string (const char *a, const char *b, size_t len)
 static inline size_t ini_string_find (Ini_String s, char ch)
 {
   char *const p = (char *)memchr (s.data, ch, s.size);
-  return p ? (p - s.data) : (size_t)-1;
+  return p ? (size_t)(p - s.data) : (size_t)-1;
 }
 
 
