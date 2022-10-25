@@ -10,10 +10,11 @@ static inline void assert_value (Ini_String value, const char *expected)
   }
 }
 
-static inline void assert_error (Ini_Parse_Result result, const char *error)
+static inline void assert_error (Ini_Parse_Result result, const char *error, unsigned line)
 {
   assert (!result.ok);
   assert (strcmp (result.error, error) == 0);
+  assert (result.error_line == line);
 }
 
 void test_stable ()
@@ -70,15 +71,15 @@ void test_errors ()
   const char *unallowed_global = "name=value\n";
   assert_error (
     ini_parse_string (unclosed_section, 0, ini_options_stable),
-    "unclosed section"
+    "unclosed section", 1
   );
   assert_error (
     ini_parse_string (no_value, 0, ini_options_stable),
-    "name without value"
+    "name without value", 2
   );
   assert_error (
     ini_parse_string (unallowed_global, 0, ini_options_stable),
-    "no table defined"
+    "no table defined", 1
   );
   puts ("Success: test_errors");
 }

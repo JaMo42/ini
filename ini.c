@@ -452,7 +452,9 @@ static Ini_Parse_Result ini_parse (Ini_Parse_Context *pc)
   if (pc->options.flags & INI_GLOBAL_PROPS) {
     pc->current_table = &pc->the.tables_and_globals;
   }
+  unsigned line_number = 0;
   for (;;) {
+    ++line_number;
     const bool is_eof = ini_get_line (pc, &linebuf);
     line.data = linebuf.data;
     line.size = linebuf.size;
@@ -464,6 +466,7 @@ static Ini_Parse_Result ini_parse (Ini_Parse_Context *pc)
       return (Ini_Parse_Result) {
         .unwrap = pc->the,
         .error = pc->error,
+        .error_line = line_number,
         .ok = false
       };
     }
@@ -475,6 +478,7 @@ static Ini_Parse_Result ini_parse (Ini_Parse_Context *pc)
   return (Ini_Parse_Result) {
     .unwrap = pc->the,
     .error = "Success",
+    .error_line = 0,
     .ok = true
   };
 }

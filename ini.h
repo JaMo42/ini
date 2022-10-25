@@ -73,14 +73,16 @@ typedef struct {
 /// The result of parsing an ini file.
 ///
 /// If the parsing was successful `unwrap` contains the full object and `ok` is
-/// set to `true`. `error` is also set to `"Success"` in this case.
+/// set to `true`. `error` is also set to `"Success"` in this case and
+/// `error_line` to `0`.
 ///
 /// If the was an error during parsing `ok` is set to `false` and `error`
 /// contains a description of the error. In this case the ini object is already
-/// free'd.
+/// free'd. `error_line` holds the line on which the error occurred.
 typedef struct {
   Ini unwrap;
   const char *error;
+  unsigned error_line;
   bool ok;
 } Ini_Parse_Result;
 
