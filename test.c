@@ -33,6 +33,7 @@ void test_stable ()
   assert_value (ini_get (ini, "foo", "bar"), "baz ; this is not a comment");
   assert_value (ini_get (ini, "section", "c"), NULL);
   assert_value (ini_get (ini, "foo", "empty_value"), "");
+  assert_value (ini_get (ini, "foo", "sAmE"), "xyz");
   puts ("Success: test_stable");
   ini_free (ini);
 }
