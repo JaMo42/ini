@@ -41,7 +41,11 @@ Which [varying features](https://en.wikipedia.org/wiki/INI_file#Varying_features
 
     - `\n` Newline
 
-    - `\x??` A single byte value, there are currently no Unicode escapes
+    - `\x??` A single byte value
+    
+    - `\u????` 32-bit unicode escape (must be 4 digits)
+    
+    - `\U????????` 64-bit unicode escape (must be 8 digits)
 
 Some special characters can also be changed:
 

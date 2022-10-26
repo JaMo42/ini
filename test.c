@@ -61,7 +61,7 @@ void test_all ()
       assert (with_null.data[i] == expected[i]);
     }
   }
-  ini_free (ini);
+  assert_value (ini_get (ini, "special", "unicode"), "\U00012345 \u0123");
   puts ("Success: test_all");
 }
 
@@ -70,6 +70,12 @@ void test_errors ()
   const char *unclosed_section = "[section\nname=value";
   const char *no_value = "[section]\nname\n";
   const char *unallowed_global = "name=value\n";
+  const char *unicode_too_large = "u='\\U00110000'";
+  const char *unicode_high_surrogate = "u='\\uD820'";
+  const char *unicode_low_surrogate = "u='\\uDC20'";
+  const char *unicode_4_missing = "u='\\u123'";
+  const char *unicode_8_missing = "u='\\U12345'";
+  const Ini_Options all_options = INI_OPTIONS_WITH_FLAGS (INI_ALL_FLAGS);
   assert_error (
     ini_parse_string (unclosed_section, 0, ini_options_stable),
     "unclosed section", 1
@@ -81,6 +87,26 @@ void test_errors ()
   assert_error (
     ini_parse_string (unallowed_global, 0, ini_options_stable),
     "no table defined", 1
+  );
+  assert_error (
+    ini_parse_string (unicode_too_large, 0, all_options),
+    "illegal Unicode character", 1
+  );
+  assert_error (
+    ini_parse_string (unicode_low_surrogate, 0, all_options),
+    "illegal Unicode character", 1
+  );
+  assert_error (
+    ini_parse_string (unicode_high_surrogate, 0, all_options),
+    "illegal Unicode character", 1
+  );
+  assert_error (
+    ini_parse_string (unicode_4_missing, 0, all_options),
+    "truncated \\uXXXX escape", 1
+  );
+  assert_error (
+    ini_parse_string (unicode_8_missing, 0, all_options),
+    "truncated \\UXXXXXXXX escape", 1
   );
   puts ("Success: test_errors");
 }

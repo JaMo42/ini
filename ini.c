@@ -284,14 +284,100 @@ static void ini_parse_section (Ini_Parse_Context *pc, Ini_String line)
 }
 
 
-static inline const char * ini_process_quoted (Ini_String *out,
-    Ini_String quoted)
+static inline int ini_unicode_escape (Ini_Parse_Context *pc, char *out_,
+    const char **source)
+{
+  unsigned char *out = (unsigned char *)out_;
+  const int digits = **source == 'u' ? 4 : 8;
+  uint32_t codepoint = 0;
+  char ch;
+  for (int i = 0; i < digits; ++i) {
+    ch = *++(*source);
+    if (!isxdigit (ch)) {
+      if (digits == 4) {
+        pc->error = "truncated \\uXXXX escape";
+      } else {
+        pc->error = "truncated \\UXXXXXXXX escape";
+      }
+      return 0;
+    }
+    codepoint *= 16;
+    switch (ch) {
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        codepoint += ch - '0';
+        break;
+
+      case 'a':
+      case 'b':
+      case 'c':
+      case 'd':
+      case 'e':
+      case 'f':
+        codepoint += 10 + ch - 'a';
+        break;
+
+      case 'A':
+      case 'B':
+      case 'C':
+      case 'D':
+      case 'E':
+      case 'F':
+        codepoint += 10 + ch - 'A';
+        break;
+    }
+  }
+  // Note: surrogates are considered illegal characters since the text is
+  //       always stored as utf-8.
+      // Greater than highest unicode character
+  if (codepoint > 0x10FFFF
+      // High surrogates
+      || (codepoint >= 0xD800 && codepoint <= 0xDBFF)
+      // Low surrogates
+      || (codepoint >= 0xDC00 && codepoint <= 0xDFFF)) {
+    pc->error = "illegal Unicode character";
+    return 0;
+  }
+  if (codepoint < (1 << 7)) {
+    *out = codepoint;
+    return 1;
+  }
+  if (codepoint < (1 << 11)) {
+    *out++ = 0xC0 | (codepoint >> 6);
+    *out   = 0x80 | (codepoint & 0x3F);
+    return 2;
+  }
+  if (codepoint < (1 << 16)) {
+    *out++ = 0xE0 | (codepoint >> 12);
+    *out++ = 0x80 | ((codepoint >> 6) & 0x3F);
+    *out   = 0x80 | (codepoint & 0x3F);
+    return 3;
+  }
+  if (1) {
+    *out++ = 0xF0 | (codepoint >> 18);
+    *out++ = 0x80 | ((codepoint >> 12) & 0x3F);
+    *out++ = 0x80 | ((codepoint >> 6) & 0x3F);
+    *out   = 0x80 | (codepoint & 0x3F);
+    return 4;
+  }
+}
+
+
+static inline const char * ini_process_quoted (Ini_Parse_Context *pc,
+    Ini_String *out, Ini_String quoted)
 {
   const char *p = quoted.data;
   const char *const end = p + quoted.size;
   const char quote_char = *p++;
-  // Since we do not have unicode escapes we know the result will at most be
-  // the same length as the quoted string.
+  // The result will at most be the same length as the quoted string.
   // We subtract 2 from the size for the 2 quoting characters and add 1 back
   // for the null terminator
   if (out->data) {
@@ -344,6 +430,16 @@ static inline const char * ini_process_quoted (Ini_String *out,
         *write++ = code;
         break;
 
+      case 'u':
+      case 'U':
+        code = ini_unicode_escape (pc, write, &p);
+        if (pc->error) {
+          return NULL;
+        }
+        write += code;
+        size += code - 1;
+        break;
+
       default:
         // Ignore unknown escapes
         break;
@@ -361,21 +457,26 @@ static inline const char * ini_process_quoted (Ini_String *out,
 }
 
 
-static inline const char * ini_set_value (Ini_String *out, Ini_String raw,
-    const Ini_Options *options)
+static inline void ini_set_value (Ini_Parse_Context *pc,
+    Ini_String *out, Ini_String raw, const Ini_Options *options)
 {
   const bool inline_comments = (options->flags & INI_INLINE_COMMENTS) != 0;
   if ((raw.data[0] == '\'' || raw.data[0] == '"')
       && (options->flags & INI_QUOTED_VALUES) != 0) {
-    const char *const end = ini_process_quoted (out, raw);
+    const char *const end = ini_process_quoted (pc, out, raw);
+    if (pc->error) {
+      return;
+    }
     if (end == NULL) {
-      return "unterminated quoted value";
+      pc->error = "unterminated quoted value";
+      return;
     }
     if (*end != '\0' && !inline_comments) {
-      return "trailing characters after quoted string";
+      pc->error = "trailing characters after quoted string";
+      return;
     }
     ini_strip (out);
-    return NULL;
+    return;
   }
   size_t comment = 0;
   if ((options->flags & INI_INLINE_COMMENTS) != 0) {
@@ -385,7 +486,7 @@ static inline const char * ini_set_value (Ini_String *out, Ini_String raw,
           out->data = (char *)malloc (1);
           out->data[0] = '\0';
           out->size = 0;
-          return NULL;
+          return;
         }
         if (ini_isspace (raw.data[comment-1])) {
           break;
@@ -402,7 +503,7 @@ static inline const char * ini_set_value (Ini_String *out, Ini_String raw,
   memcpy (out->data, raw.data, out->size);
   out->data[out->size] = '\0';
   ini_strip (out);
-  return NULL;
+  return;
 }
 
 
@@ -425,7 +526,7 @@ static void ini_parse_key_value (Ini_Parse_Context *pc, Ini_String line)
 
   Ini_Node *node = ini_set_node (&pc->current_table->values, name);
 
-  pc->error = ini_set_value (&node->as_string, raw_value, &pc->options);
+  ini_set_value (pc, &node->as_string, raw_value, &pc->options);
 }
 
 
