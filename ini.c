@@ -99,7 +99,11 @@ static int ini_compare_string (const char *a, const char *b, size_t len)
       return A - B;
     }
   }
-  return 0;
+  // Note: assuming `a` is an `Ini_String` that may not be null terminated,
+  // but `b` is always null terminated, which is currently the case.
+  bool a_is_done = len == 0;
+  bool b_is_done = *b == 0;
+  return b_is_done - a_is_done;
 }
 
 

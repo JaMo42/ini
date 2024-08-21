@@ -5,7 +5,7 @@
 #include "rb_tree.h"
 
 enum {
-  /// Allow global properties, these are properties that occurr before any
+  /// Allow global properties, these are properties that occur before any
   /// section, or that re within an unnamed section ("[]").
   INI_GLOBAL_PROPS = 0x1,
 
@@ -31,7 +31,7 @@ enum {
 ///
 /// The flags are: `INI_GLOBAL_PROPS`, `INI_NESTING`, `INI_INLINE_COMMENTS`,
 ///                `INI_QUOTED_VALUES`.
-/// `INI_ALL_FLAGS` enables all falgs.
+/// `INI_ALL_FLAGS` enables all flags.
 typedef struct {
   unsigned char flags;
   char name_value_delim;
@@ -43,7 +43,7 @@ typedef struct {
 ///  - none of the flags are enabled
 ///  - `=` is the name-value delimiter
 ///  - `;` is the comment character
-///  - `.` is the section delim, this is not actually used as nesting is not
+///  - `.` is the section delimiter, this is not actually used as nesting is not
 ///        enabled but it is set anyways so this value can be copied and have
 ///        all the defaults set.
 extern const Ini_Options ini_options_stable;
@@ -78,7 +78,7 @@ typedef struct {
 ///
 /// If the was an error during parsing `ok` is set to `false` and `error`
 /// contains a description of the error. In this case the ini object is already
-/// free'd. `error_line` holds the line on which the error occurred.
+/// freed. `error_line` holds the line on which the error occurred.
 typedef struct {
   Ini unwrap;
   const char *error;

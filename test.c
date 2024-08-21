@@ -1,6 +1,16 @@
-#include "ini.h"
+#define RBT_IMPLEMENTATION
 #include <assert.h>
 #include <string.h>
+
+// Include source to get access to internal functions
+#include "ini.c"
+
+extern int ini_compare_string(const char *a, const char *b, size_t len);
+
+int scmp(Ini_String a, const char *b) {
+    // This is the only way it is currently used.
+    return ini_compare_string(a.data, b, a.size);
+}
 
 static inline void assert_value (Ini_String value, const char *expected)
 {
@@ -15,6 +25,26 @@ static inline void assert_error (Ini_Parse_Result result, const char *error, uns
   assert (!result.ok);
   assert (strcmp (result.error, error) == 0);
   assert (result.error_line == line);
+}
+
+void test_internals() {
+#define S(x) ((Ini_String) { (char*)(x), sizeof(x)-1 })
+#define sign(x) (((x) > 0) - ((x) < 0))
+#define compat(a, b) (sign(scmp(S(a), (b))) == sign(strcmp((a), (b))))
+    assert(scmp(S("name"), "name1") != 0);
+    assert(scmp(S("name1"), "name") != 0);
+    assert(scmp(S("a"), "ab") < 0);
+    assert(scmp(S("ab"), "a") > 0);
+    assert(compat("a", "ab"));
+    assert(compat("ab", "a"));
+    assert(compat("foo", "bar"));
+    assert(compat("bar", "foo"));
+    assert(compat("baz", "bar"));
+    assert(compat("bar", "baz"));
+#undef compat
+#undef sign
+#undef S
+    puts("Success: test_internals");
 }
 
 void test_stable ()
@@ -63,6 +93,7 @@ void test_all ()
   }
   assert_value (ini_get (ini, "special", "unicode"), "\U00012345 \u0123");
   puts ("Success: test_all");
+  ini_free(ini);
 }
 
 void test_errors ()
@@ -113,6 +144,7 @@ void test_errors ()
 
 int main ()
 {
+  test_internals();
   test_stable ();
   test_all ();
   test_errors ();
