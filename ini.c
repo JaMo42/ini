@@ -256,6 +256,7 @@ static void ini_strip (Ini_String *line)
     --i;
   }
   line->data[i+1] = '\0';
+  line->size = i + 1;
 }
 
 
