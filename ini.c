@@ -666,47 +666,37 @@ Ini_String ini_get (const Ini *self, const char *table, const char *name)
   return ini_table_get (the_table, name);
 }
 
-
-static void ini_free_values (struct rbtree *values)
+static void ini_visit_nodes(struct rbt_node *node, void (*f)(Ini_Node *))
 {
-  if (values->root == NULL) {
+  if (node == NULL) {
     return;
   }
-  struct rbt_node *it, *next = rbt_first (values);
-  struct rbt_node *const last = rbt_last (values);
-  Ini_Node *node = NULL;
-  do {
-    it = next;
-    next = rbt_next (it);
-    free (node);
-    node = INI_NODE (it);
-    free (node->key);
-    free (node->as_string.data);
-  } while (it != last);
-  free (node);
+  ini_visit_nodes(node->left, f);
+  ini_visit_nodes(node->right, f);
+  f(INI_NODE(node));
 }
 
+static void ini_free_value_visitor(Ini_Node *node)
+{
+  free(node->as_string.data);
+  free(node->key);
+  free(node);
+}
+
+static void ini_free_table(Ini_Table *table);
+
+static void ini_free_tables_visitor(Ini_Node *node)
+{
+    ini_free_table(&node->as_table);
+    free(node->key);
+    free(node);
+}
 
 static void ini_free_table (Ini_Table *table)
 {
-  ini_free_values (&table->values);
-  if (table->tables.root == NULL) {
-    return;
-  }
-  struct rbt_node *it, *next = rbt_first (&table->tables);
-  struct rbt_node *const last = rbt_last (&table->tables);
-  Ini_Node *node = NULL;
-  do {
-    it = next;
-    next = rbt_next (it);
-    free (node);
-    node = INI_NODE (it);
-    free (node->key);
-    ini_free_table (&node->as_table);
-  } while (it != last);
-  free (node);
+    ini_visit_nodes(table->values.root, ini_free_value_visitor);
+    ini_visit_nodes(table->tables.root, ini_free_tables_visitor);
 }
-
 
 void ini_free (Ini *self)
 {
