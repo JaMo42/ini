@@ -64,6 +64,12 @@ typedef struct {
   struct rbtree tables;
 } Ini_Table;
 
+/// An iterator over the values of a table.
+typedef struct {
+    struct rbt_node *at;
+    struct rbt_node *last;
+} Ini_Table_Iterator;
+
 /// The ini object.
 typedef struct {
   Ini_Table tables_and_globals;
@@ -95,6 +101,29 @@ typedef struct {
   size_t size;
 } Ini_String;
 
+#define INI_STRING_NONE ((Ini_String) { NULL, 0 })
+
+/// A key-value pair.
+typedef struct {
+    const char *key;
+    Ini_String value;
+} Ini_Key_Value;
+
+#define INI_KEY_VALUE_NONE ((Ini_Key_Value) { NULL, INI_STRING_NONE })
+
+/// Checks if the iterator is done during iteration.
+///
+/// Example
+/// -------
+/// ```c
+/// Ini_Table_Iterator it = ini_table_iter(table);
+/// Ini_Key_Value kv;
+/// while (!INI_ITER_DONE(kv = ini_iter_next(&it))) {
+///     printf("%s = \"%.*s\"\n", kv.key, (int)kv.value.size, kv.value.data);
+/// }
+/// ```
+#define INI_ITER_DONE(kv) ((kv).key == INI_KEY_VALUE_NONE.key)
+
 /// Parses an ini file from a string.
 ///
 /// If length is `0` it is parsed until a null terminator.
@@ -121,5 +150,12 @@ Ini_String ini_get (const Ini *self, const char *table, const char *name);
 
 /// Destroys the ini object.
 void ini_free (Ini *self);
+
+/// Creates an iterator over the values of a table.
+Ini_Table_Iterator ini_table_iter(const Ini_Table *self);
+
+/// Advances the iterator and returns the next key-value pair.
+/// If the iterator is exhausted `INI_KEY_VALUE_NONE` is returned.
+Ini_Key_Value ini_iter_next(Ini_Table_Iterator *self);
 
 #endif /* INI_H */

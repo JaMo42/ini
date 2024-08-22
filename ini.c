@@ -4,8 +4,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#define INI_STRING_NONE ((Ini_String) { NULL, 0 })
-
 #define INI_MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 const Ini_Options ini_options_stable = {
@@ -701,4 +699,35 @@ static void ini_free_table (Ini_Table *table)
 void ini_free (Ini *self)
 {
   ini_free_table (&self->tables_and_globals);
+}
+
+Ini_Table_Iterator ini_table_iter (const Ini_Table *self)
+{
+  return (Ini_Table_Iterator) {
+    .at = rbt_first(&self->values),
+    .last = rbt_last(&self->values)
+  };
+}
+
+Ini_Key_Value ini_iter_next(Ini_Table_Iterator *self) {
+    if (self->at == NULL) {
+        if (self->last != NULL) {
+            Ini_Node *node = INI_NODE(self->last);
+            self->last = NULL;
+            return (Ini_Key_Value) {
+                .key = node->key,
+                .value = node->as_string
+            };
+        }
+        return INI_KEY_VALUE_NONE;
+    }
+    Ini_Node *node = INI_NODE(self->at);
+    self->at = rbt_next(self->at);
+    if (self->at == self->last) {
+        self->at = NULL;
+    }
+    return (Ini_Key_Value) {
+        .key = node->key,
+        .value = node->as_string
+    };
 }

@@ -142,11 +142,39 @@ void test_errors ()
   puts ("Success: test_errors");
 }
 
+void test_iteration() {
+    FILE *f = fopen ("test_stable.ini", "r");
+    Ini_Parse_Result result = ini_parse_file (f, ini_options_stable);
+    fclose (f);
+    assert (result.ok);
+    Ini *ini = &result.unwrap;
+    const Ini_Table *table = ini_get_table(ini, "iter");
+    Ini_Table_Iterator it = ini_table_iter(table);
+    Ini_Key_Value kv;
+    enum { COUNT = 3 };
+    bool keys_seen[COUNT] = {0};
+    bool values_seen[COUNT] = {0};
+    int i = 0;
+    while (!INI_ITER_DONE(kv = ini_iter_next(&it))) {
+        keys_seen[kv.key[0] - '0' - 1] = true;
+        values_seen[kv.value.data[0] - '0' - 1] = true;
+        ++i;
+    }
+    assert(i == COUNT);
+    for (i = 0; i < COUNT; ++i) {
+        assert(keys_seen[i]);
+        assert(values_seen[i]);
+    }
+    puts("Success: test_iteration");
+    ini_free(ini);
+}
+
 int main ()
 {
   test_internals();
   test_stable ();
   test_all ();
   test_errors ();
+  test_iteration();
 }
 
