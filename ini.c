@@ -703,7 +703,7 @@ void ini_free (Ini *self)
 
 Ini_Table_Iterator ini_table_iter (const Ini_Table *self)
 {
-  if (!self) {
+  if (!self || self->values.root == NULL) {
     return (Ini_Table_Iterator) {
       .at = NULL,
       .last = NULL,

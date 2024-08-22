@@ -168,6 +168,9 @@ void test_iteration() {
     table = NULL;
     it = ini_table_iter(table);
     assert(INI_ITER_DONE(kv = ini_iter_next(&it)));
+    table = ini_get_table(ini, "empty");
+    it = ini_table_iter(table);
+    assert(INI_ITER_DONE(kv = ini_iter_next(&it)));
     puts("Success: test_iteration");
     ini_free(ini);
 }
