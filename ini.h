@@ -152,7 +152,8 @@ Ini_String ini_get (const Ini *self, const char *table, const char *name);
 void ini_free (Ini *self);
 
 /// Creates an iterator over the values of a table.
-Ini_Table_Iterator ini_table_iter(const Ini_Table *self);
+/// The given value may be NULL in which case an exhausted iterator is returned.
+Ini_Table_Iterator ini_table_iter(const Ini_Table *maybe_self);
 
 /// Advances the iterator and returns the next key-value pair.
 /// If the iterator is exhausted `INI_KEY_VALUE_NONE` is returned.

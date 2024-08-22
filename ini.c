@@ -703,6 +703,12 @@ void ini_free (Ini *self)
 
 Ini_Table_Iterator ini_table_iter (const Ini_Table *self)
 {
+  if (!self) {
+    return (Ini_Table_Iterator) {
+      .at = NULL,
+      .last = NULL,
+    };
+  }
   return (Ini_Table_Iterator) {
     .at = rbt_first(&self->values),
     .last = rbt_last(&self->values)

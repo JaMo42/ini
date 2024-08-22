@@ -165,6 +165,9 @@ void test_iteration() {
         assert(keys_seen[i]);
         assert(values_seen[i]);
     }
+    table = NULL;
+    it = ini_table_iter(table);
+    assert(INI_ITER_DONE(kv = ini_iter_next(&it)));
     puts("Success: test_iteration");
     ini_free(ini);
 }
